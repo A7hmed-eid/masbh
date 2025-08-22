@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Masbha | مسبحة</title>
+    <meta name="description" content="مسبحة رقمية بسيطة تحسب الأذكار وتحتفظ بعدّك تلقائيًا." />
+    <style>
+        :root {
+            --bg: #fdfdfd;
+            --card: #fff;
+            --accent: #4cafef;
+            --accent-dark: #1976d2;
+            --text: #222;
+            --muted: #666;
+            --radius: 1rem;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        main.app {
+            max-width: 1000px;
+            margin: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .big {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .ring {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .ring button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn.outline {
+            background: none;
+            border: 2px solid var(--accent);
+            color: var(--accent-dark);
+        }
+
+        .field {
+            margin: 1rem 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+
+        input,
+        select {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ccc;
+            width: 100%;
+        }
+
+        .toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toggle {
+            font-size: 0.9rem;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 1rem;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <header>
+            <div class="brand">
+                <div class="logo" aria-hidden="true">ﻡ</div>
+                <div>
+                    <h1>Masbha – مسبحة</h1>
+                    <div class="subtitle">عدّاد أذكار بسيط وسريع الحفظ تلقائيًا</div>
+                </div>
+            </div>
+            <button class="btn outline" id="exportBtn" title="تصدير العدادات كملف JSON">تصدير البيانات</button>
+        </header>
+
+        <section class="grid">
+            <!-- Counter side -->
+            <div class="card counter-wrap">
+                <div class="display" aria-live="polite">
+                    <div>
+                        <div class="meta">العدد الحالي</div>
+                        <div class="big" id="count">0</div>
+                    </div>
+                    <div class="meta">
+                        <div>الجلسة: <strong id="session">0</strong></div>
+                        <div>الإجمالي: <strong id="total">0</strong></div>
+                        <div>الهدف: <strong id="goalView">—</strong></div>
+                    </div>
+                </div>
+
+                <div class="ring">
+                    <button id="tap" aria-label="زِد العدّاد" autofocus>سَبِّح</button>
+                </div>
+
+                <div class="actions">
+                    <button class="btn" id="minusOne" title="طرح 1">– 1</button>
+                    <button class="btn" id="reset">تصفير</button>
+                    <button class="btn" id="saveCheckpoint" title="حفظ نقطة">حفظ نقطة</button>
+                    <button class="btn" id="restoreCheckpoint" title="استرجاع نقطة">استرجاع</button>
+                </div>
+            </div>
+
+            <!-- Controls side -->
+            <div class="card panel">
+                <div class="field">
+                    <label for="dhikr">الذكر</label>
+                    <select id="dhikr">
+                        <option value="">— اختر ذكرًا (اختياري) —</option>
+                        <option value="سبحان الله">سبحان الله</option>
+                        <option value="الحمد لله">الحمد لله</option>
+                        <option value="الله أكبر">الله أكبر</option>
+                        <option value="لا إله إلا الله">لا إله إلا الله</option>
+                        <option value="سبحان الله وبحمده">سبحان الله وبحمده</option>
+                        <option value="سبحان الله العظيم">سبحان الله العظيم</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="goal">ضع هدفًا (مثال: 33 أو 100)</label>
+                    <input type="number" id="goal" inputmode="numeric" placeholder="33" min="1" />
+                </div>
+
+                <div class="toggles">
+                    <label class="toggle"><input type="checkbox" id="vibrate" /> اهتزاز</label>
+                    <label class="toggle"><input type="checkbox" id="clickSound" /> صوت</label>
+                    <label class="toggle"><input type="checkbox" id="autoResetAtGoal" /> تصفير عند الوصول للهدف</label>
+                </div>
+
+                <div class="field">
+                    <label for="preset">اختصارات سريعة</label>
+                    <div class="actions" style="justify-content:flex-start">
+                        <button class="btn" data-preset="33">33</button>
+                        <button class="btn" data-preset="100">100</button>
+                        <button class="btn" data-preset="300">300</button>
+                        <button class="btn" data-preset="1000">1000</button>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>نصائح</label>
+                    <ul style="margin:0; padding-inline-start:20px; color:var(--muted); line-height:1.6">
+                        <li>اضغط على الزر الكبير أو استخدم مفتاح المسافة/الإدخال.</li>
+                        <li>يتم حفظ تقدمك تلقائيًا في المتصفح.</li>
+                        <li>من "تصدير البيانات" يمكنك حفظ العدّ كملف.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            صُنِع بحب لـ <strong>Masbha</strong>. نسأل الله القبول.
+        </footer>
+    </main>
+
+    <script>
+        const countEl = document.getElementById("count");
+        const sessionEl = document.getElementById("session");
+        const totalEl = document.getElementById("total");
+        const goalInput = document.getElementById("goal");
+        const goalView = document.getElementById("goalView");
+        const tapBtn = document.getElementById("tap");
+        const minusOne = document.getElementById("minusOne");
+        const resetBtn = document.getElementById("reset");
+        const saveCheckpoint = document.getElementById("saveCheckpoint");
+        const restoreCheckpoint = document.getElementById("restoreCheckpoint");
+        const exportBtn = document.getElementById("exportBtn");
+
+        let count = parseInt(localStorage.getItem("count")) || 0;
+        let session = parseInt(localStorage.getItem("session")) || 0;
+        let total = parseInt(localStorage.getItem("total")) || 0;
+        let goal = parseInt(localStorage.getItem("goal")) || 0;
+        let checkpoint = parseInt(localStorage.getItem("checkpoint")) || 0;
+
+        function render() {
+            countEl.textContent = count;
+            sessionEl.textContent = session;
+            totalEl.textContent = total;
+            goalView.textContent = goal || "—";
+        }
+        render();
+
+        function save() {
+            localStorage.setItem("count", count);
+            localStorage.setItem("session", session);
+            localStorage.setItem("total", total);
+            localStorage.setItem("goal", goal);
+        }
+
+        tapBtn.addEventListener("click", () => {
+            count++;
+            session++;
+            total++;
+            save();
+            render();
+            if (goal && count >= goal) {
+                if (document.getElementById("autoResetAtGoal").checked) {
+                    count = 0; save(); render();
+                }
+            }
+            if (document.getElementById("vibrate").checked && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            if (document.getElementById("clickSound").checked) {
+                new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQcAAA==").play();
+            }
+        });
+
+        minusOne.addEventListener("click", () => {
+            if (count > 0) { count--; session--; total--; save(); render(); }
+        });
+
+        resetBtn.addEventListener("click", () => {
+            count = 0; session = 0; save(); render();
+        });
+
+        goalInput.addEventListener("change", () => {
+            goal = parseInt(goalInput.value) || 0;
+            save(); render();
+        });
+
+        document.querySelectorAll("[data-preset]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                goal = parseInt(btn.dataset.preset);
+                goalInput.value = goal;
+                save(); render();
+            });
+        });
+
+        saveCheckpoint.addEventListener("click", () => {
+            checkpoint = count;
+            localStorage.setItem("checkpoint", checkpoint);
+            alert("تم حفظ النقطة: " + checkpoint);
+        });
+
+        restoreCheckpoint.addEventListener("click", () => {
+            checkpoint = parseInt(localStorage.getItem("checkpoint")) || 0;
+            count = checkpoint;
+            save(); render();
+            alert("تم استرجاع النقطة: " + checkpoint);
+        });
+
+        exportBtn.addEventListener("click", () => {
+            const data = { count, session, total, goal };
+            const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "masbha-data.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.addEventListener("keydown", e => {
+            if (e.code === "Space" || e.code === "Enter") { tapBtn.click(); }
+        });
+    </script>
+</body>
+
+</html>
